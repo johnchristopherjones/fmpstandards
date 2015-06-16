@@ -1,0 +1,45 @@
+/**
+ * =====================================================
+ * FileFmpPath ( path )
+ *
+ * PURPOSE:
+ *		Provide an FMP specific wrapper around unix paths.
+ *
+ * RETURNS:
+ *		(string) FMP valid path
+ *
+ * EXAMPLES:
+ *		FileFmpPath ( "/Applications/Notes.app" ) = "filemac://Macintosh HD/Applications/Notes.app"
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * NOTES:
+ *		This is useful when used with plugins or scripting
+ *		languages which need a valid OS path.
+ *
+ * HISTORY:
+ *		RELEASED: 2015-06-15 by johnj@michaelhaynes.com
+ * 
+ * =====================================================
+ *
+ */
+
+Case (
+	// Already FMP path?
+	Position ( path ; "filemac:/" ; 1 ; 1 ) = 1;
+		path;
+
+	// Starts with "/Volumes/"
+	Position ( path ; "/Volumes/" ; 1 ; 1 ) = 1;
+		"filemac:/" & Right ( path ; Length ( path ) - Length ( "/Volumes/" ) );
+
+	// Does not start with "/Volumes"
+	Position ( path ; "/Volumes/" ; 1 ; 1 ) = 0;
+		"filemac:/" &
+			// Fetch the operating system volume name from FMP's idea of a temporary path
+			Let ( ~temp = Get ( TemporaryPath ) ; Middle (  ~temp ; 2 ; Position ( ~temp ; "/" ; 1 ; 2 ) - 2 ) ) &
+			path;
+
+	// Default
+		path )
