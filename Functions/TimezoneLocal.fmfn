@@ -1,0 +1,37 @@
+/**
+ * TimestampLocal ( isoTimestamp )
+ *
+ * PURPOSE:
+ *		Converts an ISO-8601 timestamp to a FileMaker timestamp
+ *		(local timezone)
+ *
+ * PARAMETERS:
+ *		isoTimestamp: An ISO-8601-formatted timestamp string,
+ * 			with or without UTC offset.  e.g.,
+ * 			"2013-08-29 00:09:56 -0500"
+ * 			Must contain a time if an offset is present.
+ * 			All delimiters are optional except the offset's.
+ *
+ * RETURNS:
+ *		A FileMaker Timestamp in the local timezone
+ *
+ * RELEASE: 2015-06-16
+ *
+ */
+Let ( [
+	offsetPosition = Position ( isoTimestamp ; "+" ; 1 ; 1 ) + Position ( isoTimestamp ; "-" ; 1 ; 3 );
+	offset = If ( offsetPosition; Middle ( isoTimestamp ; offsetPosition ; 6 ) );
+	timestampOffset = 3600 * Floor ( offset / 100 ) +
+		60 * Mod ( offset ; 100 );
+	localOffset = Get ( CurrentTimeStamp ) - Floor ( Get ( CurrentTimeUTCMilliseconds ) / 1000 );
+	ts = Filter ( isoTimestamp ; "0123456789" );
+	zonelessTs = Timestamp (
+		Date ( Middle ( ts ; 5 ; 2 ) ; Middle ( ts ; 7 ; 2 ) ; Middle ( ts ; 1 ; 4 ) ) ;
+		Time ( Middle ( ts ; 9 ; 2 ) ; Middle ( ts ; 11 ; 2 ) ; Middle ( ts ; 13 ; 2 ) )
+	);
+	utcTs = zonelessTs - timestampOffset;
+	localTs = If ( offsetPosition > 0 ; utcTs + localOffset ; zonelessTs );
+
+~=""] ;
+	localTs
+)
